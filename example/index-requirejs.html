@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>table表格组件</title>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+		<link rel="stylesheet" href="demo.css">
+	</head>
+	<body>
+		<div class="form">
+			名称: <input type="text" name="gname"> <a href="#" id="search">search</a>
+		</div>
+		<div id="tab-list" ajaxurl="list.json">
+			loading...
+		</div>
+		<div id="pager"></div>
+		<script type="text/javascript" src="../src/require.js"></script>
+		<script type="text/x-handlebars-template" id="tpl-list">
+			<table class="tab-list">
+					<thead>
+							<tr>
+									<th class="first-cell">序号</th>
+									<th>商品条码</th>
+									<th>商品名称</th>
+									<th>状态</th>
+									<th>操作</th>
+							</tr>
+					</thead>
+					<tbody>
+							{{#each data}}
+							<tr>
+									<td class="first-cell">{{@index}}</td>
+									<td>{{goods_bn}}</td>
+									<td>{{goods_name}}</td>
+									<td>上架</td>
+									<td><a class="js-ajax" js-ajax-param="id={{goods_id}}" href="action.json">下架</a> <a class="js-delete" href="action.json">删除</a></td>
+							</tr>
+							{{/each}}
+					</tbody>
+			</table>
+		</script>
+		<script>
+		requirejs.config({
+			//By default load any module IDs from js/lib
+			baseUrl: '../dest',
+			paths: {
+	                $:"jquery-1.11.2",
+	                handlebars:"handlebars-v3.0.0",
+	                paging:'paging',
+	                query:'query',
+	                'dialog':'dialog',
+	                'table':'table'
+			},
+			shim:{
+				"$":{
+					export:'$'
+				}
+			}
+		});
+		require(["$","table"], function($,Table){
+			var table = new Table($('#tab-list'), $('#tpl-list'), $('#pager'), {}, $('#search'));
+			table.init({type:'post'});
+		});
+		</script>
+	</body>
+</html>
