@@ -1,6 +1,6 @@
 # table
 表格的渲染组件
-
+[DEMO请点我](http://lovewebgames.com/jsmodule/table.html "table的demo")
 ![](example/table.jpg)
 
 *如上图所示，功能基本包括常用表格中遇到的分页、搜索、删除、AJAX操作。由于是用的HANDLEBARS渲染的，所以样式可能很好的控制，要加新的功能也较容易。*
