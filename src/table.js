@@ -9,11 +9,11 @@
 (function(root, factory) {
 	//amd
 	if (typeof define === 'function' && define.amd) {
-		define(['$', 'handlebars', 'paging', 'query', 'dialog'], factory);
+		define(['$', 'dialog', 'handlebars', 'paging'], factory);
 	} else {
-		root.Table = factory($, Handlebars, Paging, Query, Dialog);
+		root.Table = factory($, Dialog, Handlebars, Paging);
 	}
-})(this, function($, Handlebars, Paging, Query, Dialog) {
+})(this, function($, Dialog, Handlebars, Paging) {
 	Handlebars.registerHelper('equalsten', function(v1, options) {
 		if (v1 % 10 == 0 && v1 != 0) {
 			return options.fn(this);
@@ -23,6 +23,19 @@
 	});
 	Handlebars.registerHelper('equals', function(v1, v2, options) {
 		if (v1 == v2) {
+			return options.fn(this);
+		} else {
+			return options.inverse(this);
+		}
+	});
+	Handlebars.registerHelper('indexOf', function(v1, arr, options) {
+		var returnValue = false;
+		for(var i= 0 ,l = arr.length;i <l ;i ++){
+			if(arr[i]==v1){
+				returnValue = true;
+			}
+		}
+		if (returnValue) {
 			return options.fn(this);
 		} else {
 			return options.inverse(this);
@@ -54,12 +67,9 @@
 		this.param = $.extend(param, {});
 	}
 	Table.prototype = {
-		init: function(settings) {
+		init: function() {
 			var source = this.temp.html();
 			this.template = Handlebars.compile(source);
-			this.settings = settings || {
-				type: 'get'
-			};
 			if (this.search) {
 				this.param = this.getParam(this.search.closest('.form'));
 				this.bindSearch();
@@ -92,7 +102,7 @@
 				}
 				return false;
 			});
-			$(this.table).on('click', '.js-delete', function(e) {
+			$(this.table).on('click', '.js-delegate-delete', function(e) {
 				var ajaxurl = $(this).attr('href');
 				var param = $(this).attr('js-ajax-param') || {};
 				$.confirm('是否确认删除？', [{
@@ -141,7 +151,69 @@
 			_this.bind();
 		},
 		getParam: function(form) {
-			return Query.getForm(form);
+			var result = {};
+			$(form).find('*[name]').each(function(i, v) {
+				var nameSpace,
+					name = $(v).attr('name'),
+					val = $.trim($(v).val()),
+					tempArr = [],
+					tempObj = {};
+				if (name == '') {
+					return;
+				}
+				val = val == $(v).attr('placeholder') ? "" : val;
+				//处理radio add by yhx  2014-06-18
+				if ($(v).attr("type") == "radio") {
+					var tempradioVal = null;
+					$("input[name='" + name + "']:radio").each(function() {
+						if ($(this).is(":checked"))
+							tempradioVal = $.trim($(this).val());
+					});
+					if (tempradioVal) {
+						val = tempradioVal;
+					} else {
+						val = "";
+					}
+				}
+
+				if ($(v).attr("type") == "checkbox") {
+					var tempradioVal = [];
+					$("input[name='" + name + "']:checkbox").each(function() {
+						if ($(this).is(":checked"))
+							tempradioVal.push($.trim($(this).val()));
+					});
+					if (tempradioVal.length) {
+						val = tempradioVal.join(',');
+					} else {
+						val = "";
+					}
+				}
+				//构建参数
+				if (name.match(/\./)) {
+					tempArr = name.split('.');
+					nameSpace = tempArr[0];
+					tempObj[tempArr[1]] = val;
+					if (!result[nameSpace]) {
+						result[nameSpace] = tempObj;
+					} else {
+						result[nameSpace] = $.extend({}, result[nameSpace], tempObj);
+					}
+
+				} else {
+					result[name] = val;
+				}
+
+			});
+			var obj = {};
+			for (var o in result) {
+				var v = result[o];
+				if (typeof v == "object") {
+					obj[o] = JSON.stringify(v);
+				} else {
+					obj[o] = result[o]
+				}
+			}
+			return obj;
 		},
 		bind: function() {
 			var _this = this;
@@ -162,12 +234,12 @@
 				t = 30;
 				var l = _this.table.width() / 2 - 32;
 				_this.table.find('tbody,.tbody').html('');
-				//_this.table.nextAll('.sg-pager').find('.nodata').html('');
+				_this.table.nextAll('.sg-pager').find('.nodata').html('');
 				_this.page.hide();
 				_this.table.append('<div class="loadingdata" style="position:absolute;left:' + l + 'px;top:' + t + 'px;"/>');
 			};
 
-			_this.ajaxData(_this.ajaxurl, _this.param).done(function(result) {
+			ajaxData(_this.ajaxurl, _this.param).done(function(result) {
 				_this.page.show();
 				//loading.remove();
 				_this.loading && _this.loading.remove();
@@ -196,38 +268,33 @@
 			}
 			tar.attr("pagesize", _this.pageSize);
 
-			//tar.parent().prevAll().remove();
+			tar.parent().prevAll().remove();
 			if (_this._total == 0) {
 				_this.table.html('<p class="pdl10 nodata">' + '没有符合条件的数据!' + '</p>');
 				tar.hide();
 			} else {
 				tar.show();
 			}
-			this.pageData = null;
-			this.page.html('');
-			this.pageData = new Paging();
-			this.pageData.init({
-				target: this.page,
-				pagesize: _this.pageSize,
-				current: _this.currentPage,
-				count: _this._total,
-				callback: function(p) {
-					_this.currentPage = p;
-					_this.bind();
-				}
-			});
-		},
-		ajaxData: function(url, param) {
-			param = $.extend({}, param);
-			//return $.post(url, param, function(data) {}, 'json');
-			var xhr = $.ajax({
-				type: this.settings.type,
-				url: url,
-				data: param,
-				dataType: 'json'
-			});
-			return xhr;
+			if (!this.pageData) {
+				this.pageData = new Paging();
+				this.pageData.init({
+					target: this.page,
+					pagesize: _this.pageSize,
+					count: _this._total,
+					callback: function(p) {
+						_this.currentPage = p;
+						_this.bind();
+					}
+				});
+			}else{
+				this.pageData.render({count:_this._total,pagesize:_this.pageSize,current:this.currentPage});
+			}
 		}
 	};
+	// 
+	function ajaxData(url, param) {
+		param = $.extend({}, param);
+		return $.post(url, param, function(data) {}, 'json');
+	}
 	return Table;
 });
