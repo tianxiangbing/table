@@ -121,9 +121,14 @@
 							}
 						});
 					}else{
+						var objAux = {
+							url: ajaxurl,
+							type: 'POST',
+							data: param,
+							dataType: 'json'
+						}
 						$.ajax(objAux).done(function(result) {
 							if (result.status) {
-								d.hide();
 								_this.gosearch(_this.currentPage);
 							} else {
 								$.alert(result.msg);
