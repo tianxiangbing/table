@@ -30,8 +30,8 @@
 	});
 	Handlebars.registerHelper('indexOf', function(v1, arr, options) {
 		var returnValue = false;
-		for(var i= 0 ,l = arr.length;i <l ;i ++){
-			if(arr[i]==v1){
+		for (var i = 0, l = arr.length; i < l; i++) {
+			if (arr[i] == v1) {
 				returnValue = true;
 			}
 		}
@@ -48,6 +48,9 @@
 		} else {
 			return formatAmount.doFormat($.trim(arr[0]));
 		}
+	});
+	Handlebars.registerHelper('addOne', function(v1) {
+		return parseInt(v1) + 1 || 0 + 1;
 	});
 
 	function Table(table, temp, page, param, search, callback, filterCon) {
@@ -91,21 +94,49 @@
 				if ($(this).attr('href')) {
 					var ajaxurl = $(this).attr('href');
 					var param = $(this).attr('js-ajax-param') || {};
-					$.post(ajaxurl, param).done(function(result) {
-						//console.log(result)
-						if (result.status) {
-							_this.gosearch();
-						} else {
-							$.alert(result.msg);
-						}
-					});
+					if ($(this).attr('confirm-msg')) {
+						$.confirm($(this).attr('confirm-msg'), [{
+							yes: "确定"
+						}, {
+							no: '取消'
+						}], function(t) {
+							var d = this;
+							if (t == "yes") {
+								var objAux = {
+									url: ajaxurl,
+									type: 'POST',
+									data: param,
+									dataType: 'json'
+								}
+								$.ajax(objAux).done(function(result) {
+									if (result.status) {
+										d.hide();
+										_this.gosearch(_this.currentPage);
+									} else {
+										$.alert(result.msg);
+									}
+								});
+							} else {
+								d.hide();
+							}
+						});
+					}else{
+						$.ajax(objAux).done(function(result) {
+							if (result.status) {
+								d.hide();
+								_this.gosearch(_this.currentPage);
+							} else {
+								$.alert(result.msg);
+							}
+						});
+					}
 				}
 				return false;
 			});
 			$(this.table).on('click', '.js-delegate-delete', function(e) {
 				var ajaxurl = $(this).attr('href');
 				var param = $(this).attr('js-ajax-param') || {};
-				$.confirm('是否确认删除？', [{
+				$.confirm('是否确认删除该记录？', [{
 					yes: "确定"
 				}, {
 					no: '取消'
@@ -116,17 +147,18 @@
 							url: ajaxurl,
 							type: 'POST',
 							data: param,
-							async: false,
 							dataType: 'json'
 						}
-						$.when($.ajax(objAux)).done(function() {
-							$(e.target).closest('tr').remove()
-							d.hide();
-							setTimeout(function() {
-								_this.gosearch()
-							}, 500)
-						}).fail(function() {
-							//todo fail logic
+						$.ajax(objAux).done(function(result) {
+							if (result.status) {
+								$(e.target).closest('tr').remove()
+								d.hide();
+								setTimeout(function() {
+									_this.gosearch(_this.currentPage);
+								}, 500)
+							} else {
+								$.alert(result.msg);
+							}
 						});
 					} else {
 						d.hide();
@@ -141,9 +173,9 @@
 				_this.gosearch();
 			});
 		},
-		gosearch: function() {
+		gosearch: function(p) {
 			var _this = this;
-			_this.currentPage = 1;
+			_this.currentPage = p || 1;
 			if (_this.search) {
 				_this.param = $.extend(_this.param, _this.getParam(_this.search.closest('.form')));
 			}
@@ -244,7 +276,7 @@
 				//loading.remove();
 				_this.loading && _this.loading.remove();
 				$('.loadingdata').remove();
-				if (!result.hasError) {
+				if (result.status) {
 					var data = result.data;
 					var html = _this.template(data);
 					_this.table.html(html);
@@ -254,7 +286,10 @@
 					_this.initPager();
 					// _this.event();
 					_this.callback ? _this.callback(_this, _this.table) : null;
-				} else {}
+				} else {
+					$.alert(result.msg);
+					_this.table.html(result.msg);
+				}
 			});
 		},
 		initPager: function() {
@@ -286,8 +321,12 @@
 						_this.bind();
 					}
 				});
-			}else{
-				this.pageData.render({count:_this._total,pagesize:_this.pageSize,current:this.currentPage});
+			} else {
+				this.pageData.render({
+					count: _this._total,
+					pagesize: _this.pageSize,
+					current: this.currentPage
+				});
 			}
 		}
 	};
