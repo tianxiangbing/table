@@ -9,11 +9,11 @@
 (function(root, factory) {
 	//amd
 	if (typeof define === 'function' && define.amd) {
-		define(['$', 'dialog', 'handlebars', 'paging'], factory);
+		define(['$', 'handlebars', 'paging', 'query', 'dialog'], factory);
 	} else {
-		root.Table = factory($, Dialog, Handlebars, Paging);
+		root.Table = factory($, Handlebars, Paging, Query, Dialog);
 	}
-})(this, function($, Dialog, Handlebars, Paging) {
+})(this, function($, Handlebars, Paging, Query, Dialog) {
 	Handlebars.registerHelper('equalsten', function(v1, options) {
 		if (v1 % 10 == 0 && v1 != 0) {
 			return options.fn(this);
@@ -70,9 +70,12 @@
 		this.param = $.extend(param, {});
 	}
 	Table.prototype = {
-		init: function() {
+		init: function(settings) {
 			var source = this.temp.html();
 			this.template = Handlebars.compile(source);
+			this.settings = settings || {
+				type: 'get'
+			};
 			if (this.search) {
 				this.param = this.getParam(this.search.closest('.form'));
 				this.bindSearch();
@@ -188,69 +191,7 @@
 			_this.bind();
 		},
 		getParam: function(form) {
-			var result = {};
-			$(form).find('*[name]').each(function(i, v) {
-				var nameSpace,
-					name = $(v).attr('name'),
-					val = $.trim($(v).val()),
-					tempArr = [],
-					tempObj = {};
-				if (name == '') {
-					return;
-				}
-				val = val == $(v).attr('placeholder') ? "" : val;
-				//处理radio add by yhx  2014-06-18
-				if ($(v).attr("type") == "radio") {
-					var tempradioVal = null;
-					$("input[name='" + name + "']:radio").each(function() {
-						if ($(this).is(":checked"))
-							tempradioVal = $.trim($(this).val());
-					});
-					if (tempradioVal) {
-						val = tempradioVal;
-					} else {
-						val = "";
-					}
-				}
-
-				if ($(v).attr("type") == "checkbox") {
-					var tempradioVal = [];
-					$("input[name='" + name + "']:checkbox").each(function() {
-						if ($(this).is(":checked"))
-							tempradioVal.push($.trim($(this).val()));
-					});
-					if (tempradioVal.length) {
-						val = tempradioVal.join(',');
-					} else {
-						val = "";
-					}
-				}
-				//构建参数
-				if (name.match(/\./)) {
-					tempArr = name.split('.');
-					nameSpace = tempArr[0];
-					tempObj[tempArr[1]] = val;
-					if (!result[nameSpace]) {
-						result[nameSpace] = tempObj;
-					} else {
-						result[nameSpace] = $.extend({}, result[nameSpace], tempObj);
-					}
-
-				} else {
-					result[name] = val;
-				}
-
-			});
-			var obj = {};
-			for (var o in result) {
-				var v = result[o];
-				if (typeof v == "object") {
-					obj[o] = JSON.stringify(v);
-				} else {
-					obj[o] = result[o]
-				}
-			}
-			return obj;
+			return Query.getForm(form);
 		},
 		bind: function() {
 			var _this = this;
@@ -276,7 +217,7 @@
 				_this.table.append('<div class="loadingdata" style="position:absolute;left:' + l + 'px;top:' + t + 'px;"/>');
 			};
 
-			ajaxData(_this.ajaxurl, _this.param).done(function(result) {
+			_this.ajaxData(_this.ajaxurl, _this.param).done(function(result) {
 				_this.page.show();
 				//loading.remove();
 				_this.loading && _this.loading.remove();
@@ -333,12 +274,18 @@
 					current: this.currentPage
 				});
 			}
+		},
+		ajaxData: function(url, param) {
+			param = $.extend({}, param);
+			//return $.post(url, param, function(data) {}, 'json');
+			var xhr = $.ajax({
+				type: this.settings.type,
+				url: url,
+				data: param,
+				dataType: 'json'
+			});
+			return xhr;
 		}
 	};
-	// 
-	function ajaxData(url, param) {
-		param = $.extend({}, param);
-		return $.post(url, param, function(data) {}, 'json');
-	}
 	return Table;
 });

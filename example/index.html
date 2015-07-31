@@ -15,13 +15,13 @@
 		</div>
 		<div id="pager"></div>
 		<script type="text/javascript" src="../src/jquery-1.11.2.js"></script>
-<!-- 		<script type="text/javascript" src="../src/handlebars-v3.0.0.js"></script>
+		<script type="text/javascript" src="../src/handlebars-v3.0.0.js"></script>
 		<script type="text/javascript" src="../src/paging.js"></script>
 		<script type="text/javascript" src="../src/query.js"></script>
 		<script type="text/javascript" src="../src/dialog.js"></script>
-		<script type="text/javascript" src="../src/table.js"></script> -->
+		<script type="text/javascript" src="../src/table.js"></script>
 		<link rel="stylesheet" href="../dest/table.css">
-		<script src="../dest/table.js"></script>
+		<!-- <script src="../dest/table.js"></script> -->
 		<script type="text/x-handlebars-template" id="tpl-list">
 			<table class="tab-list">
 					<thead>
@@ -40,7 +40,7 @@
 									<td>{{goods_bn}}</td>
 									<td>{{goods_name}}</td>
 									<td>上架</td>
-									<td><a class="js-ajax" js-ajax-param="id={{goods_id}}" href="action.json">下架</a> <a class="js-delete" href="action.json">删除</a></td>
+									<td><a class="js-ajax" confirm-msg="是否确认下架?" js-ajax-param="id={{goods_id}}" href="action.json">下架</a> <a class="js-delegate-delete" href="action.json">删除</a></td>
 							</tr>
 							{{/each}}
 					</tbody>
@@ -49,7 +49,7 @@
 
 		<script>
 		var table = new Table($('#tab-list'), $('#tpl-list'), $('#pager'), {}, $('#search'));
-		table.init({type:'post'});
+		table.init({type:'get'});
 		</script>
 
 	</body>
