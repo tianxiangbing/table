@@ -290,7 +290,7 @@
 					}
 					_this.initPager();
 					// _this.event();
-					_this.callback ? _this.callback(_this, _this.table) : null;
+					_this.callback ? _this.callback.call(_this,result.data,_this.table) : null;
 				} else {
 					$.alert(result.msg);
 					_this.table.html(result.msg);
