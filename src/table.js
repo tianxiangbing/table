@@ -144,6 +144,7 @@
 			$(this.table).on('click', '.js-delegate-delete', function(e) {
 				var ajaxurl = $(this).attr('href');
 				var param = $(this).attr('js-ajax-param') || {};
+				var link = $(this);
 				$.confirm('是否确认删除该记录？', [{
 					yes: "确定"
 				}, {
@@ -162,7 +163,12 @@
 								$(e.target).closest('tr').remove()
 								d.hide();
 								setTimeout(function() {
-									_this.gosearch(_this.currentPage);
+									if(link.closest('tr').siblings('tr').size()==0 &&_this.currentPage>1){
+										_this.currentPage--;
+										_this.gosearch(_this.currentPage)
+									}else{
+										_this.gosearch(_this.currentPage);
+									}
 								}, 500)
 							} else {
 								$.alert(result.msg);
