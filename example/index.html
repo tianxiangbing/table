@@ -8,16 +8,25 @@
 	</head>
 	<body>
 		<div class="form">
-			名称: <input type="text" name="gname"> <a href="#" id="search">search</a>
+			名称: <input type="text" name="gname"> 
+			default: <input type="text" name="default" value="123"> <a href="#" id="search">search</a>
 		</div>
 		<div id="tab-list" ajaxurl="list.json">
 			loading...
 		</div>
 		<div id="pager"></div>
+		<div class="form">
+			名称: <input type="text" name="gname"> 
+			default: <input type="text" name="default" value="abc"> <a href="#" id="search2">search</a>
+		</div>
+		<div id="tab-list2" ajaxurl="list.json">
+			loading...
+		</div>
+		<div id="pager2"></div>
 		<script type="text/javascript" src="../src/jquery-1.11.2.js"></script>
 		<script type="text/javascript" src="../src/handlebars-v3.0.0.js"></script>
-		<script type="text/javascript" src="../src/paging.js"></script>
 		<script type="text/javascript" src="../src/query.js"></script>
+		<script type="text/javascript" src="../src/paging.js"></script>
 		<script type="text/javascript" src="../src/dialog.js"></script>
 		<script type="text/javascript" src="../src/table.js"></script>
 		<link rel="stylesheet" href="../dest/table.css">
@@ -40,7 +49,9 @@
 									<td>{{goods_bn}}</td>
 									<td>{{goods_name}}</td>
 									<td>上架</td>
-									<td><a class="js-ajax" confirm-msg="是否确认下架?" js-ajax-param="id={{goods_id}}" href="action.json">下架</a> <a class="js-delegate-delete" href="action.json">删除</a></td>
+									<td><a class="js-ajax" confirm-msg="是否确认下架?" js-ajax-param="id={{goods_id}}" href="action.json">下架</a> <a class="js-delegate-delete" href="action.json">删除</a>
+										<a href="index.html?id={{goods_id}}">链接</a>
+									</td>
 							</tr>
 							{{/each}}
 					</tbody>
@@ -50,6 +61,8 @@
 		<script>
 		var table = new Table($('#tab-list'), $('#tpl-list'), $('#pager'), {}, $('#search'));
 		table.init({type:'get'});
+		var table = new Table($('#tab-list2'), $('#tpl-list'), $('#pager2'), {}, $('#search2'));
+		table.init({type:'get',hash:false});
 		</script>
 
 	</body>

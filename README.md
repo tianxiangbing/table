@@ -46,16 +46,17 @@
 
 
 ----------
-
+*参数将以hash值显示在url中,所以在这个版本里只支持ie8+浏览器，如果要支持低版本的，请使用1.0.7版本*
 #属性和方法
-##constuctor:function(table, temp, page, param, search, callback, filterCon)
+##hash:true
+	是否用url hash值的形式来表达分页和搜索条件，默认为true,但如果出现两个分页时，为导致互相影响，应保证只有一个对应hash
+##constuctor:function(table, temp, page, param, search, callback)
 	构造函数，table是指存放表格的容器，可以是一个空的div，也可以是table里的一个tbody；
 	temp是指表格的模板，这里是script节点的jquery对象
 	page 需要放置分页控件的容器
 	param 初始化带的参数 type json
 	search 搜索按钮节点，你的祖先级中要有一个class为form的节点，会利用[query](https://github.com/tianxiangbing/query)格式化里面为参数，进行查询数据操作
 	callback 加载后的回调
-	filterCon 筛选过滤
 	
 ##init:function(settings)
 	init是启动方法，目前的settings中仅包含{type:'get'} ，ajax请求的类型
